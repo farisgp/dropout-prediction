@@ -7,10 +7,7 @@ model = joblib.load('./rdf_model.joblib')
 scaler = joblib.load('./scaler.pkl')
 
 def predict_status(inputs):
-    dummy_features = [0] * (36 - len(inputs))
-    final_input = inputs + dummy_features
-
-    input_array = np.array(final_input).reshape(1, -1)
+    input_array = np.array(inputs).reshape(1, -1)
     input_array_scaled = scaler.transform(input_array)
     prediction = model.predict(input_array_scaled)
     return prediction
@@ -34,37 +31,46 @@ col1, col2 = st.columns(2)
 
 with col1:
     curricular_units_2nd_sem_approved = st.number_input('Curricular Units 2nd Sem (Approved)', 0, 30, 8)
-    curricular_units_2nd_sem_grade = st.number_input('Curricular Units 2nd Sem (Grade)', 0, 20, 17)
+    admission_grade = st.slider('Admission Grade', min_value=0.0, max_value=200.0, value=170.0, step=0.1)
     curricular_units_1st_sem_approved = st.number_input('Curricular Units 1st Sem (Approved)', 0, 30, 7)
+    curricular_units_2nd_sem_grade = st.number_input('Curricular Units 2nd Sem (Grade)', 0, 20, 17)
     curricular_units_1st_sem_grade = st.number_input('Curricular Units 1st Sem (Grade)', 0, 20, 17)
-    curricular_units_2nd_sem_evaluations = st.number_input('Curricular Units 2nd Sem (Evaluations)', 0, 20, 9)
 
 with col2:
-    admission_grade = st.slider('Admission Grade', min_value=0.0, max_value=200.0, value=170.0, step=0.1)
     tuition_fees_up_to_date = st.selectbox('Tuition Fees Up To Date?', [0, 1], format_func=lambda x: 'No' if x == 0 else 'Yes')
-    age_at_enrollment = st.number_input('Age At Enrollment', min_value=0, max_value=30, value=19)
-    previous_qualification_grade = st.slider('Previous Qualification Grade', min_value=0.0, max_value=200.0, value=160.0, step=0.1)
-    curricular_units_1st_sem_evaluations = st.number_input('Curricular Units 1st Sem (Evaluations)', 0, 20, 8)
+    curricular_units_1st_sem_enrolled = st.number_input('Curricular Units 1st Semester Enrolled', min_value=0, max_value=30, value=20)
+    curricular_units_2nd_sem_enrolled = st.number_input('Curricular Units 2nd Semester Enrolled', min_value=0, max_value=30, value=20)
+    displaced = st.selectbox('Displaced', [0, 1], format_func=lambda x: 'Yes' if x == 1 else 'No')
+    scholarship_holder = st.selectbox('Scholarship Holder', [0, 1], format_func=lambda x: 'Yes' if x == 1 else 'No')
 
 # Prepare input
 input_data = [
     curricular_units_2nd_sem_approved,
-    curricular_units_2nd_sem_grade,
+    admission_grade,
     curricular_units_1st_sem_approved,
+    curricular_units_2nd_sem_grade,
     curricular_units_1st_sem_grade,
     tuition_fees_up_to_date,
-    curricular_units_2nd_sem_evaluations,
-    age_at_enrollment,
-    previous_qualification_grade,
-    admission_grade,
-    curricular_units_1st_sem_evaluations
+    curricular_units_1st_sem_enrolled,
+    curricular_units_2nd_sem_enrolled,
+    displaced,
+    scholarship_holder
 ]
 
-if st.button(' Prediction '):
+if st.button('Predict'):
     prediction = predict_status(input_data)
-    if prediction[0] == 0:
-        st.error(f"The model predicts that the student is likely to be:  **Dropout**")
-    elif prediction[0] == 1:
-        st.info(f"The model predicts that the student is likely to be:  **Enrolled**")
-    else:
-        st.success(f"The model predicts that the student is likely to be:  **Graduate**")
+
+    status_dict = {
+        0: ('Dropout', 'red'),
+        1: ('Enrolled', 'orange'),
+        2: ('Graduate', 'green')
+    }
+    
+    predicted_status_index = np.argmax(prediction, axis=1)[0]
+    predicted_status,color = status_dict[predicted_status_index]
+
+    st.markdown(
+        f"<h5>The model predicts that the student is likely to be: "
+        f"<span style='color:{color}'>{predicted_status}</span></h5>",
+        unsafe_allow_html=True
+    )
