@@ -3,8 +3,8 @@ import joblib
 import numpy as np
 
 # Load model dan scaler
-model = joblib.load('./rdf_model.joblib')
-scaler = joblib.load('./scaler.pkl')
+model = joblib.load('rdf_model.joblib')
+scaler = joblib.load('scaler.pkl')
 
 def predict_status(inputs):
     input_array = np.array(inputs).reshape(1, -1)
