@@ -66,7 +66,7 @@ if st.button('Predict'):
         2: ('Graduate', 'green')
     }
     
-    predicted_status_index = np.argmax(prediction, axis=1)[0]
+    predicted_status_index = prediction[0]
     predicted_status,color = status_dict[predicted_status_index]
 
     st.markdown(
